@@ -1,0 +1,13 @@
+[Unit]
+Description=Avalon 741 cgminer service
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=/run/cgminer.pid
+EnvironmentFile=-/etc/default/cgminer
+ExecStart=/usr/bin/cgminer $CGMINER_OPTS
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

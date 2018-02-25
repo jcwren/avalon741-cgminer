@@ -1,0 +1,4 @@
+# Configuration for cgminer init script being run during
+# the boot sequence
+
+CGMINER_OPTS=--lowmem --avalon7-fan 20-100 --avalon7-freq "600 636 672 708 744 780" --avalon7-voltage-offset -1 -o "stratum+tcp://us-east.stratum.slushpool.com:3333" -O jcwren.home:x -o "stratum+tcp://stratum.slushpool.com:3333" -O jcwren.home:x -o "stratum+tcp://us.ss.btc.com:1800" -O jcwren.home:x --api-allow W:127.0.0.1,W:172.16.0.0/16 --api-listen --real-quiet --quiet
