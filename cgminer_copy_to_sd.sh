@@ -8,11 +8,11 @@ if [[ $OSTYPE != darwin* ]]; then
 fi
 
 DISK=
-BZIP2IMG=`ls -1 deploy/*.img.bz2 | sort | tail -n 1`
+ZIP2IMG=`ls -1 deploy/image_*.zip | sort | tail -n 1`
 
-if [ "${BZIP2IMG}" == "" ]; then
+if [ "${ZIP2IMG}" == "" ]; then
   echo "*"
-  echo "*  No swarm_image_<version>.img.bz2 file exists. Aborting..."
+  echo "*  No image_YYYY-MM-DD-Raspbian-lite.zip file exists. Aborting..."
   echo "*"
   exit
 fi
@@ -31,8 +31,8 @@ if [ "${DISK}" == "" ]; then
   exit
 fi
 
-echo "Copying ${BZIP2IMG} to ${DISK}. sudo password will be needed for 'dd'"
+echo "Copying ${ZIP2IMG} to ${DISK}. sudo password will be needed for 'dd'"
 
 diskutil unmountdisk ${DISK}
-sudo sh -c "bzip2 --stdout --decompress --keep ${BZIP2IMG} | dd of=${DISK} bs=16m"
+sudo sh -c "unzip -p ${ZIP2IMG} | dd of=${DISK} bs=16m"
 diskutil eject ${DISK}
