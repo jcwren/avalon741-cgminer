@@ -66,6 +66,7 @@ rm -rf cgminer
 EOF
 
 on_chroot << EOF
+systemctl daemon-reload
 systemctl enable openvpn
 systemctl enable ssh
 systemctl enable cgminer
