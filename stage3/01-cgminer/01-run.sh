@@ -16,12 +16,6 @@ install -d                                                  ${ROOTFS_DIR}/etc/av
 install -m 644 files/etc/avahi/avahi-daemon.conf            ${ROOTFS_DIR}/etc/avahi/
 install -m 644 files/etc/avahi/services/http.service        ${ROOTFS_DIR}/etc/avahi/services/
 
-#install -d                                                  ${ROOTFS_DIR}/etc/openvpn
-#install -m 644 files/etc/openvpn/ca.crt                     ${ROOTFS_DIR}/etc/openvpn/
-#install -m 644 files/etc/openvpn/cgminer.conf               ${ROOTFS_DIR}/etc/openvpn/
-#install -m 644 files/etc/openvpn/cgminer.crt                ${ROOTFS_DIR}/etc/openvpn/
-#install -m 600 files/etc/openvpn/cgminer.key                ${ROOTFS_DIR}/etc/openvpn/
-
 install -d                                                  ${ROOTFS_DIR}/etc/sudoers.d
 install -m 600 files/etc/sudoers.d/privacy                  ${ROOTFS_DIR}/etc/sudoers.d/
 install -m 600 files/etc/sudoers.d/timeout                  ${ROOTFS_DIR}/etc/sudoers.d/
