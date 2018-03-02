@@ -9,21 +9,34 @@ EOF
 install -m 644 files/etc/default/cgminer                    ${ROOTFS_DIR}/etc/default/
 install -m 644 files/etc/default/keyboard                   ${ROOTFS_DIR}/etc/default/
 
+install -d                                                  ${ROOTFS_DIR}/etc/avahi
+install -m 644 files/etc/avahi/avahi-daemon.conf            ${ROOTFS_DIR}/etc/avahi/
+install -d                                                  ${ROOTFS_DIR}/etc/avahi/services
+install -m 644 files/etc/avahi/services/http.service        ${ROOTFS_DIR}/etc/avahi/services/
+install -m 644 files/etc/avahi/services/ssh.service         ${ROOTFS_DIR}/etc/avahi/services/
+
 install -m 644 files/etc/hostname                           ${ROOTFS_DIR}/etc/hostname
 
-install -d                                                  ${ROOTFS_DIR}/etc/avahi
-install -d                                                  ${ROOTFS_DIR}/etc/avahi/services
-install -m 644 files/etc/avahi/avahi-daemon.conf            ${ROOTFS_DIR}/etc/avahi/
-install -m 644 files/etc/avahi/services/http.service        ${ROOTFS_DIR}/etc/avahi/services/
+install -d                                                  ${ROOTFS_DIR}/etc/logrotate.d
+install -m 644 files/etc/logrotate.d/cgminer                ${ROOTFS_DIR}/etc/logrotate.d/
+
+install -d                                                  ${ROOTFS_DIR}/etc/rsyslog.d
+install -m 644 files/etc/rsyslog.d/cgminer                  ${ROOTFS_DIR}/etc/rsyslog.d/
 
 install -d                                                  ${ROOTFS_DIR}/etc/sudoers.d
-install -m 600 files/etc/sudoers.d/privacy                  ${ROOTFS_DIR}/etc/sudoers.d/
-install -m 600 files/etc/sudoers.d/timeout                  ${ROOTFS_DIR}/etc/sudoers.d/
+install -m 644 files/etc/sudoers.d/privacy                  ${ROOTFS_DIR}/etc/sudoers.d/
+install -m 644 files/etc/sudoers.d/timeout                  ${ROOTFS_DIR}/etc/sudoers.d/
 rm -f                                                       ${ROOTFS_DIR}/etc/sudoers.d/[0-9]*
 
-install -m 755 files/usr/bin/cgminer-monitor                ${ROOTFS_DIR}/usr/bin/
+install -d                                                  ${ROOTFS_DIR}/etc/sysctl.d
+install -m 644 files/etc/sysctl.d/97-noipv6.conf            ${ROOTFS_DIR}/etc/sysctl.d/
 
 install -m 644 files/lib/systemd/system/cgminer.service     ${ROOTFS_DIR}/lib/systemd/system/
+
+install -d                                                  ${ROOTFS_DIR}/root
+install -m 755 files/root/run                               ${ROOTFS_DIR}/root/
+
+install -m 755 files/usr/bin/cgminer-monitor                ${ROOTFS_DIR}/usr/bin/
 
 install -m 644 files/vimrc                                  ${ROOTFS_DIR}/root/.vimrc
 install -m 644 files/vimrc                                  ${ROOTFS_DIR}/home/cgminer/.vimrc
@@ -61,7 +74,7 @@ cd cgminer
 make
 gcc api-example.c -Icompat/jansson-2.9/src -o cgiminer-api
 chown root:root cgminer cgiminer-api
-cp cgminer cgiminer-api /usr/bin
+cp cgminer cgminer-api /usr/bin
 rm -rf cgminer
 EOF
 
