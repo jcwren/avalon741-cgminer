@@ -7,7 +7,10 @@ Type=simple
 PIDFile=/run/cgminer.pid
 EnvironmentFile=-/etc/default/cgminer
 ExecStart=/usr/bin/cgminer $CGMINER_OPTS
+StandardOutput=null
+StandardError=syslog
 Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
