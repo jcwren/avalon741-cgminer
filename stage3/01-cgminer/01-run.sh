@@ -41,6 +41,8 @@ install -m 755 files/usr/bin/cgminer-monitor                ${ROOTFS_DIR}/usr/bi
 install -m 644 files/vimrc                                  ${ROOTFS_DIR}/root/.vimrc
 install -m 644 files/vimrc                                  ${ROOTFS_DIR}/home/cgminer/.vimrc
 
+install -m 755 files/cgminer/stats                          ${ROOTFS_DIR}/home/cgminer/
+
 on_chroot << EOF
 sed -i -e 's/raspberrypi/cgminer/g' /etc/hosts
 EOF
