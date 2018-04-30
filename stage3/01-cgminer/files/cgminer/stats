@@ -1,0 +1,204 @@
+#!/bin/bash
+
+#set -e
+#set -x
+
+SLUSHPOOL=
+SLUSHPOOL_APIKEY="1967420-748a55ef1fbe635315c2afeadbd2c9ed"
+VIABTC=1
+VIABTC_APIKEY="d852d3d7f9a62b6eafd2d8a6e08ee688"
+VIABTC_BALANCE_FILE="$HOME/.via.log"
+VIABTC_BALANCE_OLD=0
+ZPOOL=
+ZPOOL_WALLET="1GkLP6HhZaSEvK3XTznkAyawvCCB6MLaMY"
+LOCKFILE="/var/lock/stats.pid"
+SLEEP=60
+dobalance=false
+htmlout=
+logfile=
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -h)
+      htmlout=btc.html
+      ;;
+    -l)
+      logfile=true
+      ;;
+    *)
+      echo "Unknown option. Only -h or nothing supported"
+      exit 1;
+      ;;
+  esac
+  shift
+done
+
+cfg_balance() {
+  if [ -f "$LOCKFILE" ]; then
+    LOCKED=$(cat "$LOCKFILE")
+    TASKS=$(pgrep stats)
+
+    for pid in $TASKS; do
+      if [ "$LOCKED" -eq "$pid" ]; then
+        dobalance=false
+        return 0
+      fi
+    done
+  fi
+
+  printf '%s\n' "$$" >"$LOCKFILE"
+  dobalance=true
+  return 0
+}
+
+log() {
+  if [ -n "$htmlout" ]; then
+    printf '%s\n' "$@" >> "$htmlout"
+  else
+    printf '%s\n' "$@"
+  fi
+}
+
+run_it()
+{
+  cfg_balance
+
+  INTERNET_DOWN=
+  SLEEP=60
+  CGMINER=$(cgminer-api -o estats); RESULT=$?
+
+  if [ "$RESULT" -ne 0 ]; then
+    clear
+    printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S')"
+    printf '\n'
+    printf 'cgminer not running?\n'
+    SLEEP=10
+    return
+  fi
+
+  if [ -z "$COUNTER" ] || [ "$COUNTER" -ge 10 ]; then
+    BTC_PRICE=$(curl -s https://api.coindesk.com/v1/bpi/currentprice.json | grep -oP '"USD":.*?},' | grep -oP '"rate_float":\K.*?(?=})')
+    if [ -n "$BTC_PRICE" ]; then
+      if [ -n "$SLUSHPOOL" ]; then
+        SLUSHPOOL_BALANCE=$(curl -s https://slushpool.com/accounts/profile/json/$SLUSHPOOL_APIKEY | grep -oP '"confirmed_reward": "\K.*?(?=")')
+        SLUSHPOOL_DOLLARS=$(printf '%s\n' "scale=2; ($BTC_PRICE * $SLUSHPOOL_BALANCE) / 1" | bc)
+      fi
+      if [ -n "$VIABTC" ]; then
+        VIABTC_BALANCE=$(curl -s https://pool.viabtc.com/user/api/$VIABTC_APIKEY/ | pcregrep -M '"btc": {.*(\n|.)*?}' | grep -oP '"account_balance": \K.*?(?=,)')
+        VIABTC_DOLLARS=$(printf '%s\n' "scale=2; ($BTC_PRICE * $VIABTC_BALANCE) / 1" | bc)
+      fi
+      if [ -n "$ZPOOL" ]; then
+        ZPOOL_BALANCE=$(curl -s https://www.zpool.ca/api/wallet?address=$ZPOOL_WALLET | grep -oP '"unpaid": \K.*?(?=,)')
+        ZPOOL_DOLLARS=$(printf '%s\n' "scale=2; ($BTC_PRICE * $ZPOOL_BALANCE) / 1" | bc)
+      fi
+      BTC_PRICE=$(printf '%.02f' "$BTC_PRICE")
+    else
+      SLUSHPOOL=
+      VIABTC=
+      ZPOOL=
+      INTERNET_DOWN=true
+    fi
+    COUNTER=1
+  else
+    ((COUNTER++))
+  fi
+
+  UP=$(printf '%s' "$CGMINER" | grep -oP 'Elapsed=\K.*?(?=,)' | head -n 1)
+  UT=$(perl -e "printf ('%dd%02dh%02dm%02ds', $UP / 86400, ($UP % 86400) / 3600, ($UP % 3600) / 60, $UP % 60);")
+
+  if [ ${#UT} -eq 0 ]; then
+    return
+  fi
+
+  if [ -n "$htmlout" ]; then
+    rm -f "$htmlout"
+    log '<!DOCTYPE html>'
+    log '<html>' 
+    log '<head>'
+    log '  <title>viaBTC</title>'
+    log '  <meta http-equiv="refresh" content="60" >'
+    log '</head>'
+    log '<body>'
+    log '<pre>'
+  else
+    clear
+  fi
+
+  log "$(date '+%Y-%m-%d %H:%M:%S')"
+  log ""
+  log "Uptime $UT"
+
+  log ""
+  if [ -n "$INTERNET_DOWN" ]; then
+    log "Can't get prices, "
+    log "internet down?"
+  else
+    if [ -n "$SLUSHPOOL" ]; then
+      log " Slush: $SLUSHPOOL_BALANCE"
+      log "(\$$SLUSHPOOL_DOLLARS @ \$$BTC_PRICE)"
+    fi
+    if [ -n "$VIABTC" ]; then
+      log "viaBTC: $VIABTC_BALANCE"
+      log "(\$$VIABTC_DOLLARS @ \$$BTC_PRICE)"
+
+      if "$dobalance"; then
+        if [ -f "$VIABTC_BALANCE_FILE" ]; then
+          VIABTC_BALANCE_OLD=$(cat "$VIABTC_BALANCE_FILE")
+        fi
+
+        if (( $(echo "$VIABTC_BALANCE != $VIABTC_BALANCE_OLD" | bc -l) )); then
+          VIABTC_CHANGE=$(printf '%s\n' "$VIABTC_BALANCE - $VIABTC_BALANCE_OLD" | bc -l)
+          printf '%s,%.8f,%.8f\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$VIABTC_BALANCE" "$VIABTC_CHANGE" >>via.log
+          printf '%s\n' "$VIABTC_BALANCE" >"$VIABTC_BALANCE_FILE"
+          VIABTC_BALANCE_OLD="$VIABTC_BALANCE"
+        fi
+      fi
+    fi
+    if [ -n "$ZPOOL" ]; then
+      log " zPool: $ZPOOL_BALANCE"
+      log "(\$$ZPOOL_DOLLARS @ \$$BTC_PRICE)"
+    fi
+  fi
+
+  IFS=$'\n'
+  CGMINERA=($(printf "%s" "$CGMINER" | grep -oP 'ID[0-9]=\K.*?(?=,MM)'))
+
+  for L1 in "${CGMINERA[@]}"; do
+      UP=$(printf "%s" "$L1" | grep -oP 'Elapsed\[\K.*?(?=\])')
+      DH=$(printf "%s" "$L1" | grep -oP 'DH\[\K.*?(?=\])')
+    TEMP=$(printf "%s" "$L1" | grep -oP 'Temp\[\K.*?(?=\])')
+    TMAX=$(printf "%s" "$L1" | grep -oP 'TMax\[\K.*?(?=\])')
+     FAN=$(printf "%s" "$L1" | grep -oP 'Fan\[\K.*?(?=\])')
+    FANR=$(printf "%s" "$L1" | grep -oP 'FanR\[\K.*?(?=\])')
+    FREQ=$(printf "%s" "$L1" | grep -oP 'Freq\[\K.*?(?=\])')
+     GHS=$(printf "%s" "$L1" | grep -oP 'GHSmm\[\K.*?(?=\])')
+
+      UT=$(perl -e "printf ('%dd%02dh%02dm%02ds', $UP / 86400, ($UP % 86400) / 3600, ($UP % 3600) / 60, $UP % 60);")
+
+    log ""
+    log "GHS  = ${GHS} (${DH})"
+    log "Temp = ${TEMP}/${TMAX}"
+    log "Fan  = ${FAN} (${FANR})"
+    log "Freq = ${FREQ}"
+    log "Up   = ${UT}"
+
+    #if [ -n "$logfile" ]; then
+    #  printf '%s %s,%s,%s,%s,%s,%s,%s,%s,%s\n' "$i" "$(date '+%Y-%m-%d %H:%M:%S')" "$UT" "$DH" "$TEMP" "$TMAX" "$FAN" "$FANR" "$FREQ" "$GHS" >>logfile.txt
+    #fi
+  done
+
+  if [ -n "$htmlout" ]; then
+    log '</pre>'
+    log '</body>'
+    log '</html>'
+  fi
+}
+
+if [ -n "$htmlout" ]; then
+  run_it
+else
+  while true; do
+    run_it
+    sleep "$SLEEP"
+  done
+fi
