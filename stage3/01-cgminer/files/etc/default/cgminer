@@ -1,4 +1,46 @@
 # Configuration for cgminer init script being run during
 # the boot sequence
 
-CGMINER_OPTS=--avalon7-fan 20-100 --avalon7-freq "600:636:672:708:744:780" --avalon7-voltage-offset -1 -o "stratum+tcp://us-east.stratum.slushpool.com:3333" -O jcwren.a741ab:x -o "stratum+tcp://stratum.slushpool.com:3333" -O jcwren.a741ab:x -o "stratum+tcp://us.ss.btc.com:1800" -O jcwren.a741ab:x --api-allow W:127.0.0.1,W:172.16.0.0/16 --api-listen --real-quiet --quiet --text-only
+# 
+# Slushpool
+#
+#CGMINER_OPTS=\
+#--avalon7-fan 20-100 \
+#--avalon7-freq "600:636:672:708:744:780" \
+#--avalon7-voltage-offset -1 \
+#--url "stratum+tcp://us-east.stratum.slushpool.com:3333" \
+#  --user jcwren.a741ab \
+#  --pass x \
+#--url "stratum+tcp://stratum.slushpool.com:3333" \
+#  --user jcwren.a741ab \
+#  --pass x \
+#--url "stratum+tcp://us.ss.btc.com:1800" \
+#  --user jcwren.a741ab \
+#  --pass x \
+#--api-allow W:127.0.0.1,W:172.16.0.0/16 \
+#--api-listen \
+#--real-quiet \
+#--quiet \
+#--text-only
+
+#
+#  Mining Rig Rentals
+#
+CGMINER_OPTS=\
+--avalon7-fan 20-100 \
+--avalon7-freq "600:636:672:708:744:780" \
+--avalon7-voltage-offset -1 \
+--url "stratum+tcp://us-east01.miningrigrentals.com:3333" \
+  --user jcwren.83772 \
+  --pass x \
+--url "stratum+tcp://us-central01.miningrigrentals.com:3333" \
+  --user jcwren.83772 \
+  --pass x \
+--url "stratum+tcp://us-west01.miningrigrentals.com:3333" \
+  --user jcwren.83772 \
+  --pass x \
+--api-allow W:127.0.0.1,W:172.16.0.0/16,W:10.244.232.0/8 \
+--api-listen \
+--real-quiet \
+--quiet \
+--text-only
