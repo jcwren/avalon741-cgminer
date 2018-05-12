@@ -33,9 +33,6 @@ install -m 644 files/etc/sysctl.d/97-noipv6.conf            ${ROOTFS_DIR}/etc/sy
 
 install -m 644 files/lib/systemd/system/cgminer.service     ${ROOTFS_DIR}/lib/systemd/system/
 
-install -d                                                  ${ROOTFS_DIR}/root
-install -m 755 files/root/run                               ${ROOTFS_DIR}/root/
-
 install -m 755 files/usr/bin/cgminer-monitor                ${ROOTFS_DIR}/usr/bin/
 
 install -m 644 files/vimrc                                  ${ROOTFS_DIR}/root/.vimrc
